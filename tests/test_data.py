@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from perceptron_lab.data import make_blobs, train_test_split
+from perceptron_lab.data import load_iris_binary, make_blobs, train_test_split
 
 
 def test_blobs_shape_and_classes() -> None:
@@ -29,6 +29,12 @@ def test_blobs_are_separated_along_x1() -> None:
 def test_blobs_invalid_arguments(n_samples: int, spread: float) -> None:
     with pytest.raises(ValueError):
         make_blobs(n_samples, spread=spread)
+
+
+def test_iris_binary() -> None:
+    X, y = load_iris_binary()
+    assert X.shape == (100, 2)
+    assert set(np.unique(y)) == {0, 1}
 
 
 def test_split_sizes_and_no_lost_samples() -> None:

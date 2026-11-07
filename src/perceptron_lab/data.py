@@ -1,8 +1,12 @@
-"""Datasets for the perceptron: synthetic 2D blobs."""
+"""Datasets for the perceptron: synthetic 2D blobs and the iris dataset."""
 
 import numpy as np
+from sklearn.datasets import load_iris
 
 from perceptron_lab.model import FloatArray, IntArray
+
+IRIS_FEATURES = ("sepal length (cm)", "petal length (cm)")
+
 
 CENTER_ZERO = (1.0, 3.0)
 CENTER_ONE = (3.2, 4.0)
@@ -49,6 +53,22 @@ def make_blobs(
 
     order = rng.permutation(n_samples)
     return X[order], y[order]
+
+
+def load_iris_binary() -> tuple[FloatArray, IntArray]:
+    """Load two iris species with two features.
+
+    Keeps setosa (class 0) and versicolor (class 1), which are linearly
+    separable, and the features sepal length and petal length.
+
+    Returns:
+        X with shape (100, 2) and y with classes 0 and 1.
+    """
+    iris = load_iris()
+    mask = iris.target < 2
+    X = np.asarray(iris.data[mask][:, [0, 2]], dtype=np.float64)
+    y = np.asarray(iris.target[mask], dtype=np.int64)
+    return X, y
 
 
 def train_test_split(
