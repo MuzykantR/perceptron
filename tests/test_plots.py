@@ -7,7 +7,7 @@ import pytest
 
 from perceptron_lab.data import make_blobs
 from perceptron_lab.model import Perceptron
-from perceptron_lab.plots import boundary_line, plot_training
+from perceptron_lab.plots import animate_training, boundary_line, plot_training
 
 
 def test_boundary_points_lie_on_the_line() -> None:
@@ -33,12 +33,14 @@ def trained() -> tuple[np.ndarray, np.ndarray, Perceptron]:
     return X, y, model
 
 
-def test_plot_file_is_created(
+def test_plot_and_animation_files_are_created(
     trained: tuple[np.ndarray, np.ndarray, Perceptron], tmp_path: Path
 ) -> None:
     X, y, model = trained
     plot_training(X, y, model, tmp_path / "plot.png")
+    animate_training(X, y, model, tmp_path / "train.gif", fps=10)
     assert (tmp_path / "plot.png").stat().st_size > 0
+    assert (tmp_path / "train.gif").stat().st_size > 0
 
 
 def test_plot_untrained_model_raises(tmp_path: Path) -> None:

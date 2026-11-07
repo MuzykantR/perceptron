@@ -7,6 +7,7 @@ works on a server without a display (for example in CI).
 from pathlib import Path
 
 import numpy as np
+from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
@@ -143,3 +144,52 @@ def plot_training(
 
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=110)
+
+
+def animate_training(
+    X: FloatArray,
+    y: IntArray,
+    model: Perceptron,
+    path: Path,
+    feature_names: tuple[str, str] = ("x1", "x2"),
+    fps: int = 2,
+) -> None:
+    """Save a GIF: the boundary moves epoch by epoch, errors are drawn alongside.
+
+    Each frame is one record of model.history_.
+
+    Args:
+        X: Samples with two features.
+        y: Classes 0 and 1.
+        model: Trained perceptron with two weights.
+        path: Output GIF file.
+        feature_names: Labels of the two axes.
+        fps: Frames (epochs) per second.
+
+    Raises:
+        ValueError: If the model has not been trained.
+    """
+    if not model.history_:
+        raise ValueError("the model must be trained before animating")
+    history = model.history_
+    errors = [epoch_errors for _, _, epoch_errors in history]
+
+    fig = Figure(figsize=(11, 4.5), layout="constrained")
+    ax_data, ax_errors = fig.subplots(1, 2)
+    _draw_points(ax_data, X, y, feature_names)
+    (boundary,) = ax_data.plot([], [], "k-", linewidth=2, label="decision boundary")
+    ax_data.legend(loc="best")
+    _setup_errors_axes(ax_errors, len(errors), max(errors))
+    (error_line,) = ax_errors.plot([], [], "o-", color="tab:red")
+
+    def update(frame: int) -> tuple[Line2D, Line2D]:
+        """Draw the state after epoch number frame + 1."""
+        weights, bias, _ = history[frame]
+        _set_line(boundary, ax_data, weights, bias)
+        ax_data.set_title(f"Epoch {frame + 1} of {len(history)}")
+        error_line.set_data(range(1, frame + 2), errors[: frame + 1])
+        return boundary, error_line
+
+    animation = FuncAnimation(fig, update, frames=len(history), blit=False)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    animation.save(str(path), writer=PillowWriter(fps=fps))
